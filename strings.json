@@ -72,6 +72,10 @@
             "zh_CN": "配色",
             "en_US": "Select color"
         },
+        "threshold_color": {
+            "zh_CN": "到达阈值配色",
+            "en_US": "Select threshold color"
+        },
         "filters_amount": {
             "zh_CN": " 个筛选",
             "en_US": " filter(s)"

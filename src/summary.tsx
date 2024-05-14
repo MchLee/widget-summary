@@ -38,6 +38,7 @@ const metricsTypePointer = jsonpointer.compile('/chartStructure/metricsType');
 const Summary = ({ openSetting, formData }) => {
   const viewId = (formData as any)?.dataSource?.view;
   const color = formData.chartStyle.color || '#7B67EE'; // FIXME: ui branch merge from the theme.
+  const thresholdColor: any[] = formData.chartStyle.thresholdColor || [{}];
   const records = useRecords(viewId, { filter: formData?.dataSource?.filter });
   const fields = useFields((formData as any)?.dataSource?.view);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -108,6 +109,18 @@ const Summary = ({ openSetting, formData }) => {
     };
   };
   const currentValue = getSummary();
+  let showColor = color;
+  let maxThreshold = 0;
+  if (thresholdColor.length > 0) {
+    thresholdColor.forEach(item => {
+      if (item && item.threshold && item.threshold > 0) {
+        if (currentValue.value >= item.threshold && item.threshold > maxThreshold) {
+          showColor = item.color;
+          maxThreshold = item.threshold;
+        }
+      }
+    })
+  }
   const { targetValue, note } = formData?.chartStyle || {};
   // When the statistical value and the target value can be calculated, the scale is displayed.
 
@@ -124,7 +137,7 @@ const Summary = ({ openSetting, formData }) => {
       <Typography variant="h1">
         {note}
       </Typography>
-      <CurrentValueWrapper color={color}>
+      <CurrentValueWrapper color={showColor}>
         {currentValue.text}
       </CurrentValueWrapper>
       <Typography variant="body1">
@@ -155,6 +168,7 @@ const useGetDefaultFormData = () => {
       chartStyle: {
         note: t(Strings.stat_count_all),
         color: '#7B67EE', // FIXME: take the color from the theme.
+        thresholdColor: []
       },
     };
   // Since it is only used for the first time, there is no need to update.
@@ -278,6 +292,23 @@ const WidgetSummaryBase: React.FC = () => {
             title: t(Strings.theme_color), // 'Color Matching',
             type: 'string',
           },
+          thresholdColor: {
+            title: t(Strings.threshold_color),
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                threshold: {
+                  type: 'number',
+                  title: 'threshold num',
+                },
+                color: {
+                  type: 'string',
+                  title: 'threshold color',
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -329,6 +360,28 @@ const WidgetSummaryBase: React.FC = () => {
       },
       color: {
         'ui:widget': 'color',
+      },
+      thresholdColor: {
+        items: {
+          threshold: {
+            'ui:options': {
+              showTitle: false,
+            },
+          },
+          color: {
+            'ui:options': {
+              showTitle: false,
+            },
+            'ui:widget': 'color',
+          },
+          'ui:order': ['threshold', 'color'],
+          'ui:options': {
+            inline: true
+          }
+        },
+        "ui:options": {
+          "orderable": false
+        }
       },
     },
     dataSource: {
